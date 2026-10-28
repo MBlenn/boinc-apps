@@ -1,0 +1,37 @@
+<!-- inputs: receptor (PDB), ligand (SDF or PDB), box = crystal ligand defining the search box -->
+<file_info>
+    <number>0</number>
+</file_info>
+<file_info>
+    <number>1</number>
+</file_info>
+<file_info>
+    <number>2</number>
+</file_info>
+<workunit>
+    <file_ref>
+        <file_number>0</file_number>
+        <open_name>receptor</open_name>
+        <copy_file/>
+    </file_ref>
+    <file_ref>
+        <file_number>1</file_number>
+        <open_name>ligand</open_name>
+        <copy_file/>
+    </file_ref>
+    <file_ref>
+        <file_number>2</file_number>
+        <open_name>box</open_name>
+        <copy_file/>
+    </file_ref>
+    <!-- rsc_fpops_est, max_error_results and max_total_results come from jobs.py
+         (create_work: values in the template would override the command line) -->
+    <!-- generous bound: the first job on a host also pulls the multi-GB app image -->
+    <rsc_fpops_bound>1e17</rsc_fpops_bound>
+    <rsc_memory_bound>4000000000</rsc_memory_bound>
+    <rsc_disk_bound>12000000000</rsc_disk_bound>
+    <delay_bound>172800</delay_bound>
+    <min_quorum>1</min_quorum>
+    <target_nresults>1</target_nresults>
+    <max_success_results>1</max_success_results>
+</workunit>

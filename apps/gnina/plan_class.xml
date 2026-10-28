@@ -1,0 +1,7 @@
+    <plan_class>
+        <name>docker_nvidia_cpu1</name>
+        <docker/>
+        <gpu_type>nvidia</gpu_type>
+        <ngpus>1</ngpus>
+        <cpu_frac>1.0</cpu_frac>
+    </plan_class>

@@ -1,0 +1,6 @@
+The structure files in this directory are copied unchanged from the test data of gnina
+(https://github.com/gnina/gnina, test/gnina/data and test/gninagrid/files; dual-licensed
+Apache-2.0 / GPL-2.0). gninagrid's rec.pdb/lig.sdf are renamed to grid_rec.pdb/grid_lig.sdf,
+noelem.sdf to noelem_lig.sdf.
+noelem_rec.pdb: line endings converted from CRLF to LF.
+broken_lig.sdf is a deliberately truncated copy of 10gs_lig.sdf (error-handling test).

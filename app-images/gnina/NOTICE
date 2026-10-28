@@ -1,0 +1,9 @@
+The image built from this Containerfile contains third-party software under its own licenses:
+
+- gnina (https://github.com/gnina/gnina), release binary gnina.cuda12.8.static,
+  dual-licensed Apache-2.0 / GPL-2.0.
+- NVIDIA CUDA runtime, cuBLAS, cuFFT, cuSPARSE, cuSOLVER, nvJitLink and cuDNN libraries,
+  taken from NVIDIA's PyPI wheels (nvidia-*-cu12), under the NVIDIA license agreements
+  shipped with those wheels.
+
+The MIT license of this repository covers only the files written for this repository.
