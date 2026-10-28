@@ -241,6 +241,10 @@ def main():
         except Exception as e:  # database trouble: let BOINC retry later
             print("gnina_validate: cannot look up result %s: %s" % (result_id, e))
             sys.exit(3)  # VAL_RESULT_TRANSIENT_ERROR
+    if not os.path.isfile(os.path.join(TESTDATA, "systems.txt")):
+        # server-side problem (app not installed with boinc-app?): never invalidate results for it
+        print("gnina_validate: test data not found in %s (set GNINA_TESTDATA)" % TESTDATA)
+        sys.exit(3)  # VAL_RESULT_TRANSIENT_ERROR
     ok, info = validate(files, wu_name)
     print("gnina_validate: %s %s: %s" % (wu_name, "VALID" if ok else "INVALID", info))
     sys.exit(0 if ok else 1)

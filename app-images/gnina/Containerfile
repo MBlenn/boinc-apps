@@ -5,7 +5,20 @@
 # taken from NVIDIA's PyPI wheels (smaller than the nvidia/cuda images). The driver itself
 # (libcuda) is injected on the host by the NVIDIA container toolkit (--gpus all).
 # The versions below were tested with gnina 1.3.3 (gnina --version, CPU docking).
+#
+# Image size: files are only touched in the build stages. A RUN step that modifies a file
+# from an earlier layer (even chmod) stores a full second copy of it, which for the 2 GB
+# binary doubled the image.
 ARG BASE=ghcr.io/mblenn/boinc-app-base:trixie
+ARG GNINA_VERSION=1.3.3
+
+# The release binary ships with debug info and symbol tables (~120 MB); strip them
+FROM docker.io/library/debian:trixie-slim AS gnina
+ARG GNINA_VERSION
+RUN apt-get update && apt-get install -y --no-install-recommends binutils \
+    && rm -rf /var/lib/apt/lists/*
+ADD https://github.com/gnina/gnina/releases/download/v${GNINA_VERSION}/gnina.cuda12.8.static /gnina.full
+RUN strip --strip-unneeded -o /gnina /gnina.full && chmod 755 /gnina
 
 FROM docker.io/library/python:3.12-slim AS cudalibs
 RUN pip download --no-deps --only-binary=:all: -d /whl \
@@ -22,11 +35,10 @@ RUN pip download --no-deps --only-binary=:all: -d /whl \
     && rm -f /cuda/libnvblas* /cuda/libcufftw* /cuda/libcusolverMg*
 
 FROM ${BASE}
-ARG GNINA_VERSION=1.3.3
-ADD https://github.com/gnina/gnina/releases/download/v${GNINA_VERSION}/gnina.cuda12.8.static /usr/local/bin/gnina
+ARG GNINA_VERSION
+COPY --from=gnina /gnina /usr/local/bin/gnina
 COPY --from=cudalibs /cuda /usr/local/lib/gnina-cuda
 ENV LD_LIBRARY_PATH=/usr/local/lib/gnina-cuda
-RUN chmod 755 /usr/local/bin/gnina \
-    && echo /usr/local/lib/gnina-cuda > /etc/ld.so.conf.d/gnina-cuda.conf && ldconfig \
+RUN echo /usr/local/lib/gnina-cuda > /etc/ld.so.conf.d/gnina-cuda.conf && ldconfig \
     && gnina --version
 LABEL org.opencontainers.image.description="gnina ${GNINA_VERSION} with CUDA/cuDNN runtime for boinc-stack"
