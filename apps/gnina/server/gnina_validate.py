@@ -174,7 +174,8 @@ def project_dir():
         if os.path.exists(os.path.join(d, "config.xml")):
             return d
         d = os.path.dirname(d)
-    sys.exit("gnina_validate: project directory not found")
+    print("gnina_validate: project directory not found from %s" % os.getcwd())
+    sys.exit(3)  # server-side problem: retry later instead of invalidating the result
 
 
 # ---------------------------------------------------------------- validation

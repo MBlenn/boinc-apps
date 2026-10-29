@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GNINA_VERSION: "1.3.3"
+      # image revision: raise it with every change of the image. Clients build the app's
+      # Dockerfile FROM a fixed tag and do not pull a tag they already have, so a new
+      # image needs a new tag (and a new APP_VERSION in apps/gnina/app.env).
+      IMAGE_REV: "2"
     steps:
       # the gnina binary is 2 GB, the CUDA libraries add about 2 GB
       - name: Free disk space
@@ -53,6 +57,7 @@ jobs:
             BASE=${{ steps.p.outputs.base }}
             GNINA_VERSION=${{ env.GNINA_VERSION }}
           tags: |
+            ${{ steps.p.outputs.image }}:${{ env.GNINA_VERSION }}-${{ env.IMAGE_REV }}
             ${{ steps.p.outputs.image }}:${{ env.GNINA_VERSION }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
@@ -62,7 +67,7 @@ jobs:
         run: |
           td=apps/gnina/testdata
           docker run --rm -v "$PWD/$td:/data:ro" -v "$RUNNER_TEMP:/out" \
-            ${{ steps.p.outputs.image }}:${{ env.GNINA_VERSION }} \
+            ${{ steps.p.outputs.image }}:${{ env.GNINA_VERSION }}-${{ env.IMAGE_REV }} \
             gnina --no_gpu -r /data/184l_rec.pdb -l /data/184l_lig.sdf \
               --autobox_ligand /data/184l_lig.sdf --seed 1 --num_modes 9 -o /out/docked.sdf
           GNINA_TESTDATA="$td" python3 apps/gnina/server/gnina_validate.py \

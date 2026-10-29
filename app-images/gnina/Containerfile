@@ -29,16 +29,21 @@ RUN pip download --no-deps --only-binary=:all: -d /whl \
         nvidia-cusparse-cu12==12.5.10.65 \
         nvidia-cusolver-cu12==11.7.1.2 \
         nvidia-nvjitlink-cu12==12.9.86 \
+        nvidia-cuda-nvrtc-cu12==12.9.86 \
     && mkdir -p /x /cuda \
     && for w in /whl/*.whl; do python -m zipfile -e "$w" /x; done \
     && find /x -path '*/lib/*' -name '*.so*' -exec cp -a {} /cuda/ \; \
-    && rm -f /cuda/libnvblas* /cuda/libcufftw* /cuda/libcusolverMg*
+    && rm -f /cuda/libnvblas* /cuda/libcufftw* /cuda/libcusolverMg* /cuda/*.alt.so*
 
 FROM ${BASE}
 ARG GNINA_VERSION
 COPY --from=gnina /gnina /usr/local/bin/gnina
 COPY --from=cudalibs /cuda /usr/local/lib/gnina-cuda
 ENV LD_LIBRARY_PATH=/usr/local/lib/gnina-cuda
+# libnvrtc is not linked but loaded at run time by PyTorch (CNN scoring on the GPU), so
+# "gnina --version" and CPU runs do not notice if it is missing: check it explicitly.
 RUN echo /usr/local/lib/gnina-cuda > /etc/ld.so.conf.d/gnina-cuda.conf && ldconfig \
+    && for l in libnvrtc.so.12 libnvrtc-builtins.so.12.9; do \
+           ldconfig -p | grep -q "$l" || { echo "missing $l"; exit 1; }; done \
     && gnina --version
 LABEL org.opencontainers.image.description="gnina ${GNINA_VERSION} with CUDA/cuDNN runtime for boinc-stack"

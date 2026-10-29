@@ -72,6 +72,14 @@ the result.
 
 After the first build, set the GHCR package `boinc-app-gnina` to public.
 
-To update gnina: change `GNINA_VERSION` in the workflow, adjust the image tag in
-`apps/gnina/files/Dockerfile`, raise `APP_VERSION` in `apps/gnina/app.env`, then run
-`boinc-app install gnina --from ...` again.
+The image is tagged `<gnina version>-<IMAGE_REV>` (e.g. `1.3.3-2`) and `<gnina version>`.
+Clients build the app's Dockerfile `FROM` a fixed tag and never pull a tag again that they
+already have, so every image change needs a new tag. To update the image or gnina:
+
+1. change `IMAGE_REV` (and `GNINA_VERSION` for a new gnina release) in the workflow
+2. use the new tag in `apps/gnina/files/Dockerfile`
+3. raise `APP_VERSION` in `apps/gnina/app.env` (new app version, new local image name)
+4. run `boinc-app install gnina --from ...` again on the server
+
+PyTorch inside gnina loads `libnvrtc` only at run time for CNN scoring on the GPU. The image
+build checks that it is present, because CPU runs (including the CI smoke test) do not need it.
