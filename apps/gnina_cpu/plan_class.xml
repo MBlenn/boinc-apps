@@ -1,0 +1,4 @@
+    <plan_class>
+        <name>docker_cpu1</name>
+        <docker/>
+    </plan_class>

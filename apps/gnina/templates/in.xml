@@ -24,10 +24,10 @@
         <open_name>box</open_name>
         <copy_file/>
     </file_ref>
-    <!-- rsc_fpops_est, max_error_results and max_total_results come from jobs.py
-         (create_work: values in the template would override the command line) -->
-    <!-- generous bound: the first job on a host also pulls the multi-GB app image -->
-    <rsc_fpops_bound>1e17</rsc_fpops_bound>
+    <!-- rsc_fpops_est, rsc_fpops_bound, max_error_results and max_total_results come from
+         jobs.py, which knows CPU vs. GPU (create_work: values in the template would override
+         the command line). The bound is generous: the first job on a host also pulls the
+         multi-GB app image, which counts as run time. -->
     <rsc_memory_bound>4000000000</rsc_memory_bound>
     <rsc_disk_bound>12000000000</rsc_disk_bound>
     <delay_bound>172800</delay_bound>

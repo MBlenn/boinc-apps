@@ -1,4 +1,4 @@
-# gnina (GPU docking test app)
+# gnina and gnina_cpu (docking test apps)
 
 [gnina](https://github.com/gnina/gnina) docks small molecules into protein structures and
 rescores the poses with convolutional neural networks (CNN) on the GPU. This app is a **test
@@ -6,23 +6,45 @@ app**: it runs gnina on a handful of well-known systems from gnina's own test da
 results can be checked automatically. It exercises the full chain (GPU in the container, input
 files, output upload, a real validator) before production docking campaigns.
 
+There are two apps with the same test data, validator and image:
+
+| App | Plan class | Resources | Scoring |
+|---|---|---|---|
+| `gnina` | `docker_nvidia_cpu1` | 1 NVIDIA GPU + 1 CPU core | CNN-heavy modes (`refinement`, `metrorescore`, `metrorefine`, `all`), so the GPU does real work |
+| `gnina_cpu` | `docker_cpu1` | 1 CPU core, no GPU reserved (`--no_gpu`) | `rescore` only (the other CNN modes take many minutes per job on a CPU core) |
+
+Jobs are submitted per app (`boinc-app submit gnina N`, `boinc-app submit gnina_cpu N`), so
+GPU and CPU work can be fed separately. A host with one GPU runs one `gnina` task on the GPU
+and `gnina_cpu` tasks on the remaining cores at the same time.
+
+Volunteers choose in their project preferences ("Allow CPU-only tasks", "Use NVIDIA GPU").
+The web site shows these options automatically once app versions for both kinds exist; it
+recognizes GPU plan classes by name (`nvidia`, `cuda`, `amd`, `ati` ...).
+
+`apps/gnina_cpu` links to `apps/gnina` for `jobs.py`, `templates/`, `server/`, `testdata/`,
+`Dockerfile` and `main.sh`; only `app.env`, `plan_class.xml` and `job.toml` differ.
+`jobs.py` finds out which app it belongs to from its directory name.
+
 ## Job mix
 
-`boinc-app submit gnina N` creates N jobs (`apps/gnina/jobs.py`):
+`boinc-app submit <app> N` creates N jobs (`apps/gnina/jobs.py`):
 
 | Share | Kind | What it does | Validation |
 |---|---|---|---|
 | ~60 % | `redock` | native ligand into its own receptor, default model, random seed | plausibility checks **and** RMSD to the crystal pose below the per-system limit |
-| ~30 % | `cross` | ligand of system A into receptor B (A may equal B), random CNN model, scoring mode and seed | plausibility checks only |
+| ~30 % | `cross` | ligand of system A into receptor B (A may equal B), random CNN model and seed, random scoring mode (GPU app) | plausibility checks only |
 | ~10 % | `broken` | truncated ligand file | must fail on the client (exit code 2); one attempt only |
 
-Workunit names encode the kind and the systems: `gnina_<kind>_<receptor>_<ligand>_<stamp>_<n>`.
-The estimated run time (`rsc_fpops_est`) depends on the scoring mode: `rescore` 1×,
-`metrorescore` 3×, `refinement` 5×, `metrorefine` 6×, `all` 20×.
+Workunit names encode the app, the kind and the systems:
+`<app>_<kind>_<receptor>_<ligand>_<stamp>_<n>`. `jobs.py` sets `rsc_fpops_est` and
+`rsc_fpops_bound` per job: BOINC divides them by the peak FLOPS of the device, which for a GPU
+is hundreds of times higher than for a CPU core. A bound that is too low aborts tasks with
+"exceeded elapsed time limit"; the first task on a host also includes pulling the image.
 
 Test systems (`apps/gnina/testdata/systems.txt`): 184l, 10gs, 3rod, grid, noelem. The
 redocking limits (2.0 to 3.5 Å) come from a measured baseline (gnina 1.3.3 on the CPU, several
-seeds): 184l 0.5–0.9 Å, 3rod 0.5 Å, grid 0.6 Å, 10gs 0.8–2.3 Å, noelem 2.2–2.6 Å.
+seeds, `rescore`): 184l 0.5–0.9 Å, 3rod 0.5 Å, grid 0.6 Å, 10gs 0.8–2.3 Å, noelem 2.2–2.6 Å.
+`refinement` (GPU app) gave 0.67 Å for 184l.
 
 ## Validator
 
@@ -80,8 +102,8 @@ already have, so every image change needs a new tag. To update the image or gnin
 
 1. change `IMAGE_REV` (and `GNINA_VERSION` for a new gnina release) in the workflow
 2. use the new tag in `apps/gnina/files/Dockerfile`
-3. raise `APP_VERSION` in `apps/gnina/app.env` (new app version, new local image name)
-4. run `boinc-app install gnina --from ...` again on the server
+3. raise `APP_VERSION` in `apps/gnina/app.env` and `apps/gnina_cpu/app.env` (new app version, new local image name)
+4. run `boinc-app install gnina --from ...` and `boinc-app install gnina_cpu --from ...` again on the server
 
 PyTorch inside gnina loads `libnvrtc` only at run time for CNN scoring on the GPU. The image
 build checks that it is present, because CPU runs (including the CI smoke test) do not need it.

@@ -1,0 +1,4 @@
+# docker_wrapper configuration: no GPU passed into the container
+use_gpu = false
+# Fixed image name without ":tag" (see gpucheck's job.toml): built once per host and version
+image_name = "boinc-stack-gnina-cpu-@APP_VERSION@"

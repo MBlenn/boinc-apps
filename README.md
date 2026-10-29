@@ -8,6 +8,7 @@ that need more than the stack's base image are built here by GitHub Actions and 
 | App | Purpose | Client requirements |
 |---|---|---|
 | [gnina](docs/gnina.md) | GPU molecular docking test app (redocking, cross-docking, error handling) with an RMSD validator | Linux, NVIDIA GPU, Docker or Podman with the NVIDIA Container Toolkit |
+| [gnina_cpu](docs/gnina.md) | the same test workload on the CPU only, no GPU reserved | Linux, Docker or Podman |
 
 ## Installing an app into a project
 

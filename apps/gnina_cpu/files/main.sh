@@ -1,0 +1,1 @@
+../../gnina/files/main.sh

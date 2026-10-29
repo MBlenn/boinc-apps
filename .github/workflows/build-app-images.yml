@@ -73,18 +73,23 @@ jobs:
           GNINA_TESTDATA="$td" python3 apps/gnina/server/gnina_validate.py \
             --wu gnina_redock_184l_184l_ci_0 "$RUNNER_TEMP/docked.sdf"
 
-      # Job generator: every kind of job references existing test data
+      # Job generators of the GPU and the CPU app: every job references existing test data,
+      # the CPU app never uses the GPU
       - name: Test (jobs.py)
         run: |
           python3 - <<'PY'
           import importlib.util, os, random
-          spec = importlib.util.spec_from_file_location("jobs", "apps/gnina/jobs.py")
-          m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-          td = "apps/gnina/testdata"
-          jobs = m.make_jobs(200, random.Random(1), "ci", td)
-          assert len(jobs) == 200
-          for j in jobs:
-              for f in j["inputs"]:
-                  assert os.path.isfile(os.path.join(td, f)), f
-          print(sorted({j["name"].split("_")[1] for j in jobs}))
+          for app in ("gnina", "gnina_cpu"):
+              path = f"apps/{app}/jobs.py"
+              spec = importlib.util.spec_from_file_location(f"jobs_{app}", path)
+              m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+              td = f"apps/{app}/testdata"
+              jobs = m.make_jobs(200, random.Random(1), "ci", td)
+              assert len(jobs) == 200
+              for j in jobs:
+                  assert j["name"].startswith(app + "_"), j["name"]
+                  assert ("--no_gpu" in j["args"]) == (app == "gnina_cpu"), j
+                  for f in j["inputs"]:
+                      assert os.path.isfile(os.path.join(td, f)), f
+              print(app, "ok")
           PY

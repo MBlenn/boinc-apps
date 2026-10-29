@@ -18,12 +18,12 @@ Checks for every job:
   - every pose has numeric minimizedAffinity and CNNscore (0..1)
   - every pose has as many heavy atoms as the input ligand
   - the poses lie inside the docking box (centroid near the box ligand)
-Additionally for redocking jobs (gnina_redock_*):
+Additionally for redocking jobs (gnina_redock_*, gnina_cpu_redock_*):
   - at least one pose within rmsd_max (per system, systems.txt) of the crystal ligand
     (symmetry-tolerant RMSD: atoms of the same element are matched optimally)
 
 The job type and the systems come from the workunit name, created by boinc-app submit:
-  gnina_<kind>_<receptor>_<ligand>_<...>   kind = redock | cross | broken
+  gnina[_cpu]_<kind>_<receptor>_<ligand>_<...>   kind = redock | cross | broken
 """
 import math
 import os
@@ -163,7 +163,8 @@ def systems():
 # ---------------------------------------------------------------- validation
 
 def validate(files, wu_name):
-    m = re.match(r"gnina_(redock|cross|broken)_([a-z0-9]+)_([a-z0-9]+)_", wu_name or "")
+    # gnina_<kind>_... (GPU app) or gnina_cpu_<kind>_... (CPU app)
+    m = re.match(r"gnina(?:_cpu)?_(redock|cross|broken)_([a-z0-9]+)_([a-z0-9]+)_", wu_name or "")
     if not m:
         return False, "unknown workunit name %r" % wu_name
     kind, rec_code, lig_code = m.groups()
