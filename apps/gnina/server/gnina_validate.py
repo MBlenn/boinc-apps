@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 """Validator for gnina results (called by BOINC's script_validator as init script).
 
-    script_validator --app gnina --init_script "gnina_validate.py files result_id"
+    script_validator --app gnina --init_script gnina_validate.py
 
-Exit code 0 = valid, 1 = invalid, 3 = cannot decide yet (database error: BOINC retries later).
+script_validator passes the paths of the result's output files. Only a bare script name
+works: BOINC's split() keeps the delimiter in each part ("files " != "files"), so the
+argument keywords in --init_script "script files result_id" are never recognized and
+the script is called without arguments (BOINC server 1.6.2, still in master 10/2026).
+The workunit name is taken from the output file names instead:
+  <workunit>_<instance>_r<random>_<file index>
+
+Exit code 0 = valid, 1 = invalid, 3 = cannot decide yet (server-side problem: BOINC retries later).
 Prints one line per result to the validator log.
 
 Checks for every job:
@@ -152,31 +159,6 @@ def systems():
     return out
 
 
-def wu_name_for_result(result_id):
-    """Look up the workunit name in the project database (credentials from config.xml)."""
-    import MySQLdb  # python3-mysqldb in the server image
-    cfg = open(os.path.join(project_dir(), "config.xml"), encoding="utf-8").read()
-    get = lambda tag: (re.search(r"<%s>([^<]*)</%s>" % (tag, tag), cfg) or [None, ""])[1]
-    db = MySQLdb.connect(host=get("db_host") or "localhost", user=get("db_user"),
-                         passwd=get("db_passwd"), db=get("db_name"))
-    cur = db.cursor()
-    cur.execute("SELECT w.name FROM result r JOIN workunit w ON r.workunitid = w.id "
-                "WHERE r.id = %s", (int(result_id),))
-    row = cur.fetchone()
-    db.close()
-    return row[0] if row else None
-
-
-def project_dir():
-    # validators run in <project>/tmp_<host>/ or <project>/bin/
-    d = os.getcwd()
-    for _ in range(3):
-        if os.path.exists(os.path.join(d, "config.xml")):
-            return d
-        d = os.path.dirname(d)
-    print("gnina_validate: project directory not found from %s" % os.getcwd())
-    sys.exit(3)  # server-side problem: retry later instead of invalidating the result
-
 
 # ---------------------------------------------------------------- validation
 
@@ -230,18 +212,22 @@ def validate(files, wu_name):
     return True, info
 
 
+def wu_name_from_path(path):
+    """upload/xyz/<workunit>_<instance>_r<random>_<index> -> <workunit>"""
+    m = re.match(r"(.+)_\d+_r\d+_\d+$", os.path.basename(path))
+    return m.group(1) if m else None
+
+
 def main():
     args = sys.argv[1:]
-    wu_name = None
     if len(args) >= 2 and args[0] == "--wu":           # manual test: --wu NAME files...
         wu_name, files = args[1], args[2:]
-    else:                                               # script_validator: files... result_id
-        files, result_id = args[:-1], args[-1]
-        try:
-            wu_name = wu_name_for_result(result_id)
-        except Exception as e:  # database trouble: let BOINC retry later
-            print("gnina_validate: cannot look up result %s: %s" % (result_id, e))
-            sys.exit(3)  # VAL_RESULT_TRANSIENT_ERROR
+    else:                                               # script_validator: output files
+        files = args
+        wu_name = wu_name_from_path(files[0]) if files else None
+        if not wu_name:
+            print("gnina_validate: cannot derive the workunit name from %r" % (files,))
+            sys.exit(3)  # VAL_RESULT_TRANSIENT_ERROR: configuration problem, retry later
     if not os.path.isfile(os.path.join(TESTDATA, "systems.txt")):
         # server-side problem (app not installed with boinc-app?): never invalidate results for it
         print("gnina_validate: test data not found in %s (set GNINA_TESTDATA)" % TESTDATA)

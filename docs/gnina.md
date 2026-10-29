@@ -36,7 +36,9 @@ for every result. It checks:
 - redocking: at least one pose within the system's RMSD limit of the crystal ligand
   (atoms of the same element are matched optimally, no superposition)
 
-Exit code 0 = valid, 1 = invalid, 3 = database not reachable (BOINC retries later). One line per
+The job type and the systems come from the workunit name, which the script reads from the
+output file names (no database access). Exit code 0 = valid, 1 = invalid, 3 = server-side
+problem such as missing test data (BOINC retries later). One line per
 result goes to `validator_gnina.log` in the project's `log_<host>/` directory:
 
 ```bash
