@@ -24,8 +24,12 @@ podman exec <project>-daemons boinc-app list
 `install` copies the app definition into the project, so later changes here only take effect
 after another `install`. To deploy changed app files, raise `APP_VERSION` in `app.env`.
 
+`gnina` and `gnina_cpu` are opt-in (`APP_BETA=1`): volunteers only get them after enabling
+"Run test applications" in their project preferences. Offer `gpucheck` (shipped with
+boinc-stack, `boinc-app install gpucheck`) as the first step for new volunteers.
+
 Volunteer host setup (BOINC client 8.2+, Podman/Docker, NVIDIA Container Toolkit) is described in
-[boinc-stack's docs/docker-apps.md](https://github.com/MBlenn/boinc-stack/blob/main/docs/docker-apps.md).
+[boinc-stack's docs/volunteer-setup.md](https://github.com/MBlenn/boinc-stack/blob/main/docs/volunteer-setup.md).
 
 ## Layout
 

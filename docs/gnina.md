@@ -81,7 +81,9 @@ python3 bin/gnina_validate.py --wu gnina_redock_184l_184l_x_0 path/to/docked.sdf
 - Linux x86_64, BOINC client 8.2 or newer
 - NVIDIA GPU with a driver that supports CUDA 12.8 (driver 570 or newer recommended)
 - Podman or Docker usable by the client user, NVIDIA Container Toolkit (CDI for Podman), see
-  [boinc-stack docs/docker-apps.md](https://github.com/MBlenn/boinc-stack/blob/main/docs/docker-apps.md)
+  [boinc-stack docs/volunteer-setup.md](https://github.com/MBlenn/boinc-stack/blob/main/docs/volunteer-setup.md)
+- opt-in: both apps are BOINC beta apps (`APP_BETA=1`), so volunteers get them only with
+  "Run test applications" enabled in their project preferences
 - several GB of disk space for the image (pulled once per host and gnina version)
 
 Plan class `docker_nvidia_cpu1`: one GPU and one CPU core per task.
