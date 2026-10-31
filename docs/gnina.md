@@ -10,7 +10,7 @@ There are two apps with the same test data, validator and image:
 
 | App | Plan class | Resources | Scoring |
 |---|---|---|---|
-| `gnina` | `docker_nvidia_cpu1` | 1 NVIDIA GPU + 1 CPU core | CNN-heavy modes (`refinement`, `metrorescore`, `metrorefine`, `all`), so the GPU does real work |
+| `gnina` | `docker_nvidia_cpu1` | 1 NVIDIA GPU + 1 CPU core | CNN-heavy modes (`refinement`, `metrorescore`, `metrorefine`), so the GPU does real work. `all` (CNN for every search step) is not used: a single test job needed many hours |
 | `gnina_cpu` | `docker_cpu1` | 1 CPU core, no GPU reserved (`--no_gpu`) | `rescore` only (the other CNN modes take many minutes per job on a CPU core) |
 
 Jobs are submitted per app (`boinc-app submit gnina N`, `boinc-app submit gnina_cpu N`), so

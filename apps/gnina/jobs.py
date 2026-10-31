@@ -39,8 +39,10 @@ if CPU_ONLY:
     # CPU: ~1 min on a typical core (BOINC measures ~5e10 FLOPS per core).
     BASE_FPOPS, BOUND_FACTOR = 3e12, 1000
 else:
-    MODES = [("refinement", 40, 1), ("metrorescore", 20, 0.6), ("metrorefine", 25, 1.2),
-             ("all", 15, 4)]
+    # "all" (CNN for every Monte Carlo step) is left out: gnina calls it extremely
+    # expensive, and a cross-docking test job needed many hours on an RTX 4070 Ti Super
+    # with one CPU core feeding the GPU.
+    MODES = [("refinement", 50, 1), ("metrorescore", 20, 0.6), ("metrorefine", 30, 1.2)]
     REDOCK_MODE = ("refinement", 1)
     EXTRA_ARGS = ""
     # GPU: BOINC divides by the GPU's peak FLOPS (tens of TFLOPS), so the estimate has to
