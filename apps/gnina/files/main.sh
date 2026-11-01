@@ -2,7 +2,7 @@
 # gnina job: dock "ligand" into "receptor", box defined by "box" (crystal ligand of the receptor).
 # Extra gnina options (seed, CNN model, scoring mode) come from the workunit's command line,
 # which docker_wrapper passes in $ARGS (BOINC also adds "--device N" for the assigned GPU).
-# Outputs: docked.sdf (poses with scores), gnina.log
+# Outputs: docked.sdf (poses with scores, gzip-compressed), gnina.log
 set -u
 
 # gnina picks the file format from the extension: detect PDB vs. SDF by content
@@ -25,5 +25,13 @@ fi
 if ! grep -q '\$\$\$\$' docked.sdf 2>/dev/null; then
     echo "gnina produced no poses (unreadable input?)" >&2
     exit 2
+fi
+# compress the poses for the upload (SDF text shrinks to a third or less); the file keeps its
+# name, the validator and "boinc-app results" recognize gzip by its magic bytes
+if gzip -9 -n -c docked.sdf > docked.sdf.gz; then
+    mv docked.sdf.gz docked.sdf
+else
+    rm -f docked.sdf.gz
+    echo "gzip failed, uploading docked.sdf uncompressed" >&2
 fi
 exit 0

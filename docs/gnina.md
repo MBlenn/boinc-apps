@@ -51,7 +51,8 @@ seeds, `rescore`): 184l 0.5–0.9 Å, 3rod 0.5 Å, grid 0.6 Å, 10gs 0.8–2.3 �
 `script_validator` calls `apps/gnina/server/gnina_validate.py` (copied to the project's `bin/`)
 for every result. It checks:
 
-- `docked.sdf` contains at least one pose
+- `docked.sdf` contains at least one pose (the file is gzip-compressed since app version 1.5;
+  the validator recognizes gzip by its magic bytes and also accepts uncompressed files)
 - every pose has a numeric `minimizedAffinity` (−50 to 100) and a `CNNscore` (0 to 1)
 - every pose has as many heavy atoms as the input ligand
 - the pose centroids lie within 12 Å of the box ligand's centroid
@@ -73,8 +74,28 @@ Manual check of a result file (inside the daemons container, in the project dire
 python3 bin/gnina_validate.py --wu gnina_redock_184l_184l_x_0 path/to/docked.sdf
 ```
 
+`boinc-app results gnina` shows compressed result files uncompressed; elsewhere use
+`zcat -f`.
+
 `GNINA_RMSD_MAX` overrides the per-system limit, `GNINA_TESTDATA` the test data directory
 (default: `boinc_apps/gnina/testdata` in the project, created by `boinc-app install`).
+
+## Data per job
+
+| Direction | Files | Size |
+|---|---|---|
+| download | receptor, ligand, box (test data) | about 410 KB per job, but see below |
+| upload | `docked.sdf` (gzip-compressed since 1.5), `gnina.log` | before 1.5: 20–45 KB; compressed: a third or less of that |
+
+The input files are `<sticky/>` (`templates/in.xml`): the client keeps them after a task and
+reuses them, so a host downloads each of the few test files only once, not 410 KB per job.
+That only fits a small set of shared inputs like this test data. A production campaign with
+different inputs per job must not use `<sticky/>`, or every host would keep every input file
+it ever received. (`<no_delete/>` is needed here for the same reason on the server: all jobs
+share the staged files.)
+
+The app image (several GB) is downloaded once per host and gnina version, see the client
+requirements.
 
 ## Client requirements
 

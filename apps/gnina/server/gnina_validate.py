@@ -14,7 +14,7 @@ Exit code 0 = valid, 1 = invalid, 3 = cannot decide yet (server-side problem: BO
 Prints one line per result to the validator log.
 
 Checks for every job:
-  - docked.sdf contains at least one pose
+  - docked.sdf (plain or gzip-compressed, gnina 1.5+) contains at least one pose
   - every pose has numeric minimizedAffinity and CNNscore (0..1)
   - every pose has as many heavy atoms as the input ligand
   - the poses lie inside the docking box (centroid near the box ligand)
@@ -25,6 +25,7 @@ Additionally for redocking jobs (gnina_redock_*, gnina_cpu_redock_*):
 The job type and the systems come from the workunit name, created by boinc-app submit:
   gnina[_cpu]_<kind>_<receptor>_<ligand>_<...>   kind = redock | cross | broken
 """
+import gzip
 import math
 import os
 import re
@@ -162,6 +163,14 @@ def systems():
 
 # ---------------------------------------------------------------- validation
 
+def read_maybe_gzip(path):
+    """File content as bytes; gzip-compressed files (magic 1f 8b) are decompressed."""
+    data = open(path, "rb").read()
+    if data[:2] == b"\x1f\x8b":
+        data = gzip.decompress(data)
+    return data
+
+
 def validate(files, wu_name):
     # gnina_<kind>_... (GPU app) or gnina_cpu_<kind>_... (CPU app)
     m = re.match(r"gnina(?:_cpu)?_(redock|cross|broken)_([a-z0-9]+)_([a-z0-9]+)_", wu_name or "")
@@ -180,7 +189,11 @@ def validate(files, wu_name):
     sdf = files[0] if files else None
     if not sdf or not os.path.exists(sdf):
         return False, "docked.sdf missing"
-    poses = parse_sdf(open(sdf, encoding="utf-8", errors="replace").read())
+    try:
+        data = read_maybe_gzip(sdf)
+    except (OSError, EOFError) as e:
+        return False, "docked.sdf: cannot decompress (%s)" % e
+    poses = parse_sdf(data.decode("utf-8", errors="replace"))
     if not poses:
         return False, "no poses"
 

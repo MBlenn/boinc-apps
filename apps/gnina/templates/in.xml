@@ -1,17 +1,24 @@
 <!-- inputs: receptor (PDB), ligand (SDF or PDB), box = crystal ligand defining the search box.
      boinc-app stages each test data file once and all jobs share it, so the file deleter must
-     not remove it when one job is finished (no_delete). -->
+     not remove it when one job is finished (no_delete).
+     sticky: the client keeps the files after the task and reuses them for later tasks, so a
+     host downloads each of the few test files only once. Only for small shared input sets
+     like this test data: with unique inputs per job (real campaigns), sticky files would
+     pile up on the hosts. -->
 <file_info>
     <number>0</number>
     <no_delete/>
+    <sticky/>
 </file_info>
 <file_info>
     <number>1</number>
     <no_delete/>
+    <sticky/>
 </file_info>
 <file_info>
     <number>2</number>
     <no_delete/>
+    <sticky/>
 </file_info>
 <workunit>
     <file_ref>
