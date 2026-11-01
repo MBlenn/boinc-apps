@@ -101,7 +101,7 @@ requirements.
 
 - Linux x86_64, BOINC client 8.2 or newer
 - NVIDIA GPU with a driver that supports CUDA 12.8 (driver 570 or newer recommended)
-- Podman or Docker usable by the client user, NVIDIA Container Toolkit (CDI for Podman), see
+- Podman 4.1 or newer (GPU app with Podman 4.x: version 1.6 or newer) or Docker, usable by the client user, NVIDIA Container Toolkit (CDI for Podman), see
   [boinc-stack docs/volunteer-setup.md](https://github.com/MBlenn/boinc-stack/blob/main/docs/volunteer-setup.md)
 - opt-in: both apps are BOINC beta apps (`APP_BETA=1`), so volunteers get them only with
   "Run test applications" enabled in their project preferences
