@@ -108,6 +108,9 @@ requirements.
 - several GB of disk space for the image (pulled once per host and gnina version)
 
 Plan class `docker_nvidia_cpu1`: one GPU and one CPU core per task.
+On hosts with several GPUs each task uses the GPU the client assigned to it: the
+docker_wrapper (from version 1.7 on) sets `CUDA_VISIBLE_DEVICES`, and gnina uses its
+default device 0, which is then the assigned GPU. `main.sh` must not pass `--device`.
 
 ## App image
 

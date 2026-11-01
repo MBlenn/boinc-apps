@@ -1,7 +1,9 @@
 #!/bin/sh
 # gnina job: dock "ligand" into "receptor", box defined by "box" (crystal ligand of the receptor).
 # Extra gnina options (seed, CNN model, scoring mode) come from the workunit's command line,
-# which docker_wrapper passes in $ARGS (BOINC also adds "--device N" for the assigned GPU).
+# which docker_wrapper passes in $ARGS. The GPU assigned by the BOINC client is the only one
+# CUDA sees (CUDA_VISIBLE_DEVICES, set by the docker_wrapper), so gnina's default device 0 is
+# the right one; do not pass --device.
 # Outputs: docked.sdf (poses with scores, gzip-compressed), gnina.log
 set -u
 # timestamps for the steps in the task's stderr; UTC, as the container has no time zone
