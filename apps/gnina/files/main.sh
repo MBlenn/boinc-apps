@@ -4,6 +4,10 @@
 # which docker_wrapper passes in $ARGS (BOINC also adds "--device N" for the assigned GPU).
 # Outputs: docked.sdf (poses with scores, gzip-compressed), gnina.log
 set -u
+# timestamps for the steps in the task's stderr; UTC, as the container has no time zone
+# (the docker_wrapper's own lines before and after use the host's local time)
+ts() { date -u '+%Y-%m-%d %H:%M:%S UTC'; }
+echo "$(ts) main.sh @APP_VERSION@ started" >&2
 
 # gnina picks the file format from the extension: detect PDB vs. SDF by content
 fmt() { if grep -qE '^(ATOM|HETATM)' "$1"; then echo pdb; else echo sdf; fi; }
@@ -11,10 +15,12 @@ cp receptor rec.pdb
 cp ligand "lig.$(fmt ligand)"
 cp box "box.$(fmt box)"
 
+echo "$(ts) gnina started, args: ${ARGS:-}" >&2
 echo "gnina job, args: ${ARGS:-}" > gnina.log
 # shellcheck disable=SC2086
 gnina -r rec.pdb -l lig.* --autobox_ligand box.* -o docked.sdf ${ARGS:-} >> gnina.log 2>&1
 rc=$?
+echo "$(ts) gnina finished, exit code $rc; gnina.log follows" >&2
 cat gnina.log >&2
 
 if [ $rc -ne 0 ]; then
@@ -34,4 +40,5 @@ else
     rm -f docked.sdf.gz
     echo "gzip failed, uploading docked.sdf uncompressed" >&2
 fi
+echo "$(ts) main.sh finished" >&2
 exit 0
